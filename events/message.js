@@ -1,13 +1,18 @@
 // The MESSAGE event runs anytime a message is received
 // Note that due to the binding of client to every event, every event
 // goes `client, other, args` when this function is run.
+const sqlite3 = require('sqlite3').verbose();
 
 module.exports = async (client, message) => {
+  const botChannel = ["bot_commands","test","cvmod_room"];
   // It's good practice to ignore other bots. This also makes your bot ignore itself
   // and not get into a spam loop (we call that "botception").
   if (message.author.bot) return;
 
+  // If message is from a DM don't respond
   // Grab the settings for this server from Enmap.
+  if (message.channel.type === "dm") return;
+  
   // If there is no guild, get default conf (DMs)
   const settings = message.settings = client.getSettings(message.guild.id);
 
@@ -19,7 +24,51 @@ module.exports = async (client, message) => {
 
   // Also good practice to ignore any message that does not start with our prefix,
   // which is set in the configuration file.
-  if (message.content.indexOf(settings.prefix) !== 0) return;
+  if (message.content.indexOf(settings.prefix) !== 0) {
+    // open the database
+    let sql = new sqlite3.Database('./score.sqlite');
+ 
+    sql.serialize(() => {
+      sql.get(`SELECT * FROM scores WHERE userId ="${message.author.id}"`, (err, row) => {
+        if (err) {
+          console.error(err.message);
+        }
+        if (!row) {
+          sql.run("CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER, level INTEGER)");
+          sql.run(`INSERT INTO scores (userId, points, level, updated) VALUES (${message.author.id}, 1, 0,strftime('%s','now'))`, () => {
+            sql.close();
+            return
+          });
+        } else {
+          let curLevel = Math.floor(0.8 * Math.sqrt(row.points + 1));
+          if (curLevel > row.level) {
+            row.level = curLevel;
+            sql.run(`UPDATE scores SET points = ${row.points + 1}, level = ${row.level}, updated = strftime('%s','now') WHERE userId = ${message.author.id}`, (err) => {
+              if (err) {
+                console.error(err.message);
+              }
+              sql.close();
+              if (curLevel > 7) {
+                message.reply(`Your CVM Level has increased to **${curLevel}**!`);
+              }
+              return
+            });
+          }
+          else {
+            sql.run(`UPDATE scores SET points = ${row.points + 1}, updated = strftime('%s','now') WHERE userId = ${message.author.id}`, () => {
+              sql.close();
+              return
+            });
+          }
+        }
+      });
+    });
+  }
+    
+  
+  if (!botChannel.map(item => item.toLowerCase()).includes(message.channel.name.toLowerCase())) {
+  return
+}
 
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
@@ -50,7 +99,8 @@ module.exports = async (client, message) => {
     if (settings.systemNotice === "true") {
       return message.channel.send(`You do not have permission to use this command.
   Your permission level is ${level} (${client.config.permLevels.find(l => l.level === level).name})
-  This command requires level ${client.levelCache[cmd.conf.permLevel]} (${cmd.conf.permLevel})`);
+  This command requires level ${client.levelCache[cmd.conf.permLevel]} (${cmd.conf.permLevel})
+  See <#408520497417027584> for how to signup`);
     } else {
       return;
     }
