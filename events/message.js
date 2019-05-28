@@ -63,12 +63,12 @@ module.exports = async (client, message) => {
         }
       });
     });
-  }
-    
-  
-  if (!botChannel.map(item => item.toLowerCase()).includes(message.channel.name.toLowerCase())) {
   return
-}
+  }
+  
+  // if (!botChannel.map(item => item.toLowerCase()).includes(message.channel.name.toLowerCase())) {
+  // return
+  // }
 
   // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:

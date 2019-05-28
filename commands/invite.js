@@ -3,7 +3,7 @@ const { version } = require("discord.js");
 exports.run = (client, message, args, level) => { // eslint-disable-line no-unused-vars
 
 
-const msg = message.reply(`CVM invite: https://discord.gg/twzNj4G`);
+const msg = message.reply(`https://discord.gg/ndG7HWp`);
 
 };
 
