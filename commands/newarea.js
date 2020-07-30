@@ -8,13 +8,16 @@ exports.run = (client, message, args, level) => { // eslint-disable-line no-unus
   var cvmSilver = message.guild.roles.find("name", "CVM Silver");
   var cvmGold = message.guild.roles.find("name", "CVM Gold");
 
+  const bronzeChannels = ["raid12", "raid34", "raid5", "lures"];
+  const silverChannels = [];
+  const goldChannels = ["rare", "100iv", "90iv", "event"];
+  const channelList = ["chat", "raid", "ex_raid", "raid12", "raid34", "raid5", "lures", "rare", "100iv", "90iv", "event"];
 
-  const channelList = ["nests", "weather", "alert", "rare", "ultra", "100iv", "100iv_rare", "100iv_common", "candy", "event", "raid12", "raid34", "raid5"];
-  const plusChannels = ["ultra", "100iv_rare", "100iv_common"];
+
   const areaName = args.join(" ");
   var chanName = "";
   
-  if (args.join().length > 10) {
+  if (args.join().length > 13) {
     if (args.length > 1) {
       args.forEach(element => chanName+=element.slice(0,1).toLowerCase());
     }
@@ -29,11 +32,27 @@ exports.run = (client, message, args, level) => { // eslint-disable-line no-unus
     
 
   message.guild.createRole({ 
-    name: areaName + "+",
+    name: areaName + "-Gold",
     hoist: false,
     mentionable: false,
   }).then(function(role) {
-    plusRole = role;
+    goldRole = role;
+  });
+
+  message.guild.createRole({ 
+    name: areaName + "-Silver",
+    hoist: false,
+    mentionable: false,
+  }).then(function(role) {
+    silverRole = role;
+  });
+
+  message.guild.createRole({ 
+    name: areaName + "-Bronze",
+    hoist: false,
+    mentionable: false,
+  }).then(function(role) {
+    bronzeRole = role;
   });
 
   message.guild.createRole({ 
@@ -57,15 +76,33 @@ async function makeChannel (channelList,cat) {
 async function setChanPerm (chan, cat, name) {
   await chan.setParent(cat);
   await chan.overwritePermissions(everyone, {VIEW_CHANNEL: false});
-  await chan.overwritePermissions(plusRole, {VIEW_CHANNEL: true});
-  if (plusChannels.includes(name)) {
+
+
+  
+  if (bronzeChannels.includes(name)) {
+    await chan.overwritePermissions(bronzeRole, {VIEW_CHANNEL: true, SEND_MESSAGES: false});
+    await chan.overwritePermissions(silverRole, {VIEW_CHANNEL: true, SEND_MESSAGES: false});
+    await chan.overwritePermissions(goldRole, {VIEW_CHANNEL: true, SEND_MESSAGES: false});
     await chan.overwritePermissions(regRole, {VIEW_CHANNEL: false});
+    await chan.createWebhook(chan.name).then(hook => console.log(`"${name}": "${hook.id}/${hook.token}",`));
+  } else if (silverChannels.includes(name)) {
+    await chan.overwritePermissions(bronzeRole, {VIEW_CHANNEL: false, SEND_MESSAGES: false});
+    await chan.overwritePermissions(silverRole, {VIEW_CHANNEL: true, SEND_MESSAGES: false});
+    await chan.overwritePermissions(goldRole, {VIEW_CHANNEL: true, SEND_MESSAGES: false});
+    await chan.overwritePermissions(regRole, {VIEW_CHANNEL: false});
+    await chan.createWebhook(chan.name).then(hook => console.log(`"${name}": "${hook.id}/${hook.token}",`));
+  } else if (goldChannels.includes(name)) {
+    await chan.overwritePermissions(bronzeRole, {VIEW_CHANNEL: false, SEND_MESSAGES: false});
+    await chan.overwritePermissions(silverRole, {VIEW_CHANNEL: false, SEND_MESSAGES: false});
+    await chan.overwritePermissions(goldRole, {VIEW_CHANNEL: true, SEND_MESSAGES: false});
+    await chan.overwritePermissions(regRole, {VIEW_CHANNEL: false});
+    await chan.createWebhook(chan.name).then(hook => console.log(`"${name}": "${hook.id}/${hook.token}",`));
+  } else
+    await chan.overwritePermissions(bronzeRole, {VIEW_CHANNEL: true, SEND_MESSAGES: true});
+    await chan.overwritePermissions(silverRole, {VIEW_CHANNEL: true, SEND_MESSAGES: true});
+    await chan.overwritePermissions(goldRole, {VIEW_CHANNEL: true, SEND_MESSAGES: true});
+    await chan.overwritePermissions(regRole, {VIEW_CHANNEL: true, SEND_MESSAGES: true});
   }
-  else {
-    await chan.overwritePermissions(regRole, {VIEW_CHANNEL: true});
-  }
-  await chan.createWebhook(chan.name).then(hook => console.log(`"${name}": "${hook.id}/${hook.token}",`));
-}
 
 
 };

@@ -2,7 +2,7 @@ const { version } = require("discord.js");
 
 exports.run = (client, message, args, level) => { // eslint-disable-line no-unused-vars
 
-const areas = ["All", "Davis", "Dixon", "Fairfield", "Woodland", "Vacaville", "Winters", "North Natomas"];
+const areas = ["All", "Davis", "Dixon", "Fairfield", "Woodland", "Vacaville", "Winters", "North Natomas","Elk Grove","Sacramento"];
 const areaList = areas.join("\n");
 
 

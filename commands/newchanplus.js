@@ -1,20 +1,25 @@
 const { version } = require("discord.js");
+const fs = require('fs');
 
 exports.run = (client, message, args, level) => { // eslint-disable-line no-unused-vars
 
 var everyone = message.guild.defaultRole.id;
-message.guild.channels.filterArray(c => c.type === 'category' && c.name.charAt(0) === '.').map(cat => message.guild.createChannel(cat.name.substring(1) + '_' + args[0],'text').then(async chan => setChanPerm(chan, cat)));
+var newChannels = [];
+message.guild.channels.filterArray(c => c.type === 'category' && c.name.charAt(0) === '.').map(cat => message.guild.createChannel(cat.name.substring(1) + '_' + args[0],'text').then(async chan => setChanPerm(message,chan, cat,newChannels)));
 
 
-async function setChanPerm (chan, cat) {
-  regRole = await message.guild.roles.find(r=>r.name.toLowerCase() == cat.name.substring(1).toLowerCase());
-  plusRole = await message.guild.roles.find(r=>r.name.toLowerCase() == cat.name.substring(1).toLowerCase() + '+');
-  await chan.overwritePermissions(regRole, {SEND_MESSAGES: false,VIEW_CHANNEL: false});
+
+
+async function setChanPerm (message,chan, cat,newChannels) {
   await chan.overwritePermissions(everyone, {VIEW_CHANNEL: false});
-  await chan.overwritePermissions(plusRole, {SEND_MESSAGES: false,VIEW_CHANNEL: true});
+  await chan.overwritePermissions(message.guild.roles.find(r=>r.name.toLowerCase() == cat.name.substring(1).toLowerCase() + '-gold'), {SEND_MESSAGES: false,VIEW_CHANNEL: true});
   await chan.setParent(cat);
-  await chan.createWebhook(chan.name).then(hook => console.log(`${cat.name.substring(1)} \n "${args[0]}": "${hook.id}/${hook.token}",`));
-}
+  await chan.createWebhook(chan.name).then(hook=>newChannels.push({name:chan.name, alerts:"default.json", filters:chan.name.split(cat.name.substring(1).toLowerCase() + '_')[1] + '.json', geofence:cat.name.substring(1).toLowerCase().replace(/ /g,"_") + '.txt', webhook:'https://discord.com/api/webhooks/' + hook.id + '/' + hook.token}));
+  fs.writeFile('/home/cvm/test.json', JSON.stringify(newChannels, null, 2), (err) => {
+    if (err) throw err;
+    console.log('Data written to file');
+  }); 
+ }
 
 
 };
